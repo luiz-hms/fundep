@@ -1,0 +1,69 @@
+# ===============================
+# Visual Studio / .NET
+# ===============================
+
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# ===============================
+# IIS / ASP.NET
+# ===============================
+
+# ASP.NET temp files
+App_Data/*.ldf
+App_Data/*.mdf
+
+# Local IIS / Express
+*.vspscc
+*.vssscc
+.vscode/
+
+# ===============================
+# Logs
+# ===============================
+
+*.log
+
+# ===============================
+# Packages
+# ===============================
+
+packages/
+*.nupkg
+*.snupkg
+
+# ===============================
+# OS files
+# ===============================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# ===============================
+# Environment / Secrets
+# ===============================
+
+# User-specific config
+appsettings.Development.json
+web.config.user
+secrets.json
+
+# ===============================
+# Optional: XML runtime data
+# (Se quiser versionar os XML iniciais,
+# remova essas linhas)
+# ===============================
+
+#App_Data/*.xml
