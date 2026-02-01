@@ -18,6 +18,10 @@ namespace Fundep.ProjectService.Models
         public string CoordinatorId { get; set; }
 
         [DataMember(IsRequired = true)]
+
+        public string CoordinatorName { get; set; }
+
+        [DataMember(IsRequired = true)]
         public decimal Balance { get; set; }
     }
 }

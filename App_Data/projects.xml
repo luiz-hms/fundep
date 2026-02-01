@@ -1,2 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Projects />
+<Projects>
+  <Project>
+    <ProjectNumber>1</ProjectNumber>
+    <SubProjectNumber>1</SubProjectNumber>
+    <Name>projeto</Name>
+    <CoordinatorId>9601b2c25f3c49cc93f08e76f05934e7</CoordinatorId>
+    <Balance>100.00</Balance>
+  </Project>
+  <Project>
+    <ProjectNumber>2</ProjectNumber>
+    <SubProjectNumber>2</SubProjectNumber>
+    <Name>projeto 2</Name>
+    <CoordinatorId>1</CoordinatorId>
+    <Balance>10</Balance>
+  </Project>
+</Projects>

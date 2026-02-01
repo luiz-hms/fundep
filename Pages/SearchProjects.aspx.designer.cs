@@ -33,15 +33,6 @@ namespace Fundep.WebApp.Pages
         protected global::System.Web.UI.ScriptManager sm1;
 
         /// <summary>
-        /// Controle up1.
-        /// </summary>
-        /// <remarks>
-        /// Campo gerado automaticamente.
-        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
-        /// </remarks>
-        protected global::System.Web.UI.UpdatePanel up1;
-
-        /// <summary>
         /// Controle prog1.
         /// </summary>
         /// <remarks>
@@ -49,6 +40,15 @@ namespace Fundep.WebApp.Pages
         /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
         /// </remarks>
         protected global::System.Web.UI.UpdateProgress prog1;
+
+        /// <summary>
+        /// Controle up1.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.UpdatePanel up1;
 
         /// <summary>
         /// Controle lblInfo.

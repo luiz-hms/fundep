@@ -42,15 +42,6 @@ namespace Fundep.WebApp.Pages
         protected global::System.Web.UI.UpdatePanel up1;
 
         /// <summary>
-        /// Controle prog1.
-        /// </summary>
-        /// <remarks>
-        /// Campo gerado automaticamente.
-        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
-        /// </remarks>
-        protected global::System.Web.UI.UpdateProgress prog1;
-
-        /// <summary>
         /// Controle lblInfo.
         /// </summary>
         /// <remarks>
@@ -67,6 +58,42 @@ namespace Fundep.WebApp.Pages
         /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblOk;
+
+        /// <summary>
+        /// Controle txtFilterNumber.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtFilterNumber;
+
+        /// <summary>
+        /// Controle txtFilterName.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtFilterName;
+
+        /// <summary>
+        /// Controle btnSearch.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnSearch;
+
+        /// <summary>
+        /// Controle btnClearSearch.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnClearSearch;
 
         /// <summary>
         /// Controle txtProjectNumber.
@@ -87,6 +114,15 @@ namespace Fundep.WebApp.Pages
         protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvProjectNumber;
 
         /// <summary>
+        /// Controle revProjectNumber.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.RegularExpressionValidator revProjectNumber;
+
+        /// <summary>
         /// Controle txtSubProjectNumber.
         /// </summary>
         /// <remarks>
@@ -103,6 +139,15 @@ namespace Fundep.WebApp.Pages
         /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
         /// </remarks>
         protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvSubProjectNumber;
+
+        /// <summary>
+        /// Controle revSubProjectNumber.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.RegularExpressionValidator revSubProjectNumber;
 
         /// <summary>
         /// Controle txtName.

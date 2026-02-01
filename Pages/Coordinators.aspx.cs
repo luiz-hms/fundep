@@ -1,5 +1,7 @@
-using System;
+using Fundep.ProjectService.Contracts;
 using Fundep.ProjectService.Models;
+using System;
+using System.Linq;
 
 namespace Fundep.WebApp.Pages
 {
@@ -8,38 +10,47 @@ namespace Fundep.WebApp.Pages
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["auth"] == null) { Response.Redirect("~/Login.aspx"); return; }
-            if (!IsPostBack) Bind();
+            if (!IsPostBack)
+            {
+
+                Bind();
+                btnClearCoordSearch.Enabled = false;
+            }
         }
+
+        private IFundepProjectService Service() => Fundep.WebApp.ServiceFactory.Create();
 
         private void Bind()
         {
             lblOk.Text = "";
             lblInfo.Text = "";
 
-            var service = Fundep.WebApp.ServiceFactory.Create();
-            var list = service.GetCoordinators();
+            var list = Service().GetCoordinators();
 
-            gvCoords.DataSource = list;
+            var filter = (txtFilterCoord.Text ?? "").Trim();
+            if (!string.IsNullOrWhiteSpace(filter))
+                list = list
+                    .Where(c => (c.Name ?? "").IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToList();
+
+            gvCoords.DataSource = list.OrderBy(x => x.Name).ToList();
             gvCoords.DataBind();
 
             if (list.Count == 0)
-                lblInfo.Text = "Nenhum coordenador cadastrado. Cadastre pelo menos um para continuar.";
+                lblInfo.Text = "Nenhum coordenador encontrado.";
         }
+
 
         protected void BtnAddCoord_Click(object sender, EventArgs e)
         {
-            lblOk.Text = ""; lblInfo.Text = "";
+            lblOk.Text = "";
+            lblInfo.Text = "";
 
-            if (string.IsNullOrWhiteSpace(txtCoordName.Text))
-            {
-                lblInfo.Text = "Nome do coordenador é obrigatório.";
-                return;
-            }
+            if (!Page.IsValid) return;
 
             try
             {
-                var service = Fundep.WebApp.ServiceFactory.Create();
-                service.CreateCoordinator(new Coordinator
+                Service().CreateCoordinator(new Coordinator
                 {
                     Id = Guid.NewGuid().ToString("N"),
                     Name = txtCoordName.Text.Trim()
@@ -50,6 +61,28 @@ namespace Fundep.WebApp.Pages
                 Bind();
             }
             catch (Exception ex) { lblInfo.Text = ex.Message; }
+        }
+
+        protected void BtnSearchCoord_Click(object sender, EventArgs e)
+        {
+            btnClearCoordSearch.Enabled = true;
+            Bind();
+        }
+
+        protected void BtnClearCoordSearch_Click(object sender, EventArgs e)
+        {
+            txtFilterCoord.Text = "";
+            lblInfo.Text = "";
+            lblOk.Text = "";
+            btnClearCoordSearch.Enabled = false;
+            ClearValidators();
+            Bind();
+        }
+
+        private void ClearValidators()
+        {
+            foreach (System.Web.UI.IValidator v in Page.Validators)
+                v.IsValid = true;
         }
 
         protected void Gv_RowEditing(object sender, System.Web.UI.WebControls.GridViewEditEventArgs e)
@@ -66,7 +99,8 @@ namespace Fundep.WebApp.Pages
 
         protected void Gv_RowUpdating(object sender, System.Web.UI.WebControls.GridViewUpdateEventArgs e)
         {
-            lblOk.Text = ""; lblInfo.Text = "";
+            lblOk.Text = "";
+            lblInfo.Text = "";
 
             try
             {
@@ -80,8 +114,7 @@ namespace Fundep.WebApp.Pages
                     return;
                 }
 
-                var service = Fundep.WebApp.ServiceFactory.Create();
-                service.UpdateCoordinator(new Coordinator { Id = id, Name = newName });
+                Service().UpdateCoordinator(new Coordinator { Id = id, Name = newName });
 
                 gvCoords.EditIndex = -1;
                 lblOk.Text = "Coordenador atualizado.";
@@ -92,13 +125,13 @@ namespace Fundep.WebApp.Pages
 
         protected void Gv_RowDeleting(object sender, System.Web.UI.WebControls.GridViewDeleteEventArgs e)
         {
-            lblOk.Text = ""; lblInfo.Text = "";
+            lblOk.Text = "";
+            lblInfo.Text = "";
 
             try
             {
                 var id = gvCoords.DataKeys[e.RowIndex].Value.ToString();
-                var service = Fundep.WebApp.ServiceFactory.Create();
-                service.DeleteCoordinator(id);
+                Service().DeleteCoordinator(id);
 
                 lblOk.Text = "Coordenador excluído.";
                 Bind();

@@ -42,15 +42,6 @@ namespace Fundep.WebApp.Pages
         protected global::System.Web.UI.UpdatePanel up1;
 
         /// <summary>
-        /// Controle prog1.
-        /// </summary>
-        /// <remarks>
-        /// Campo gerado automaticamente.
-        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
-        /// </remarks>
-        protected global::System.Web.UI.UpdateProgress prog1;
-
-        /// <summary>
         /// Controle lblInfo.
         /// </summary>
         /// <remarks>
@@ -94,6 +85,33 @@ namespace Fundep.WebApp.Pages
         /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnAddCoord;
+
+        /// <summary>
+        /// Controle txtFilterCoord.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtFilterCoord;
+
+        /// <summary>
+        /// Controle btnSearchCoord.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnSearchCoord;
+
+        /// <summary>
+        /// Controle btnClearCoordSearch.
+        /// </summary>
+        /// <remarks>
+        /// Campo gerado automaticamente.
+        /// Para modificar, mova a declaração de campo do arquivo de designer a um arquivo code-behind.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnClearCoordSearch;
 
         /// <summary>
         /// Controle gvCoords.

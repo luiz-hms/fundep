@@ -1,1 +1,0 @@
-namespace Fundep.WebApp { public partial class Default { } }

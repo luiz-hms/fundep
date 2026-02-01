@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head runat="server">
+    <script src="Scripts/common.js"></script>
     <meta charset="utf-8" />
     <title>FUNDEP - Login</title>
     <link rel="stylesheet" href="Content/site.css" />

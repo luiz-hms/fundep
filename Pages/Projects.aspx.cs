@@ -1,7 +1,8 @@
-using System;
-using System.Globalization;
-using System.Linq;
+using Fundep.ProjectService.Contracts;
 using Fundep.ProjectService.Models;
+using System;
+using System.Linq;
+using System.Web.UI.WebControls;
 
 namespace Fundep.WebApp.Pages
 {
@@ -13,183 +14,220 @@ namespace Fundep.WebApp.Pages
 
             if (!IsPostBack)
             {
-                EnsureCoordinatorExistsOrRedirect();
-                BindCoordinators();
+                EnsureDefaultCoordinator();
+                LoadCoordinatorsDropdown();
                 BindProjects();
+
+                btnClearSearch.Enabled = false;
             }
         }
 
-        private void EnsureCoordinatorExistsOrRedirect()
+        private IFundepProjectService Service() => Fundep.WebApp.ServiceFactory.Create();
+
+        private void EnsureDefaultCoordinator()
         {
-            var service = Fundep.WebApp.ServiceFactory.Create();
-            if (service.GetCoordinators().Count == 0)
-                Response.Redirect("~/Pages/Coordinators.aspx");
+            var service = Service();
+            var coords = service.GetCoordinators();
+            if (coords.Count == 0)
+            {
+                service.CreateCoordinator(new Coordinator
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Name = "Coordenador Padrão"
+                });
+            }
         }
 
-        private void BindCoordinators()
+        private void LoadCoordinatorsDropdown()
         {
-            var service = Fundep.WebApp.ServiceFactory.Create();
+            var service = Service();
             var coords = service.GetCoordinators();
 
             ddlCoordinator.Items.Clear();
-            ddlCoordinator.Items.Add(new System.Web.UI.WebControls.ListItem("-- selecione --", ""));
-            foreach (var c in coords)
-                ddlCoordinator.Items.Add(new System.Web.UI.WebControls.ListItem(c.Name, c.Id));
+            ddlCoordinator.Items.Add(new ListItem("-- Selecione --", ""));
+
+            foreach (var c in coords.OrderBy(x => x.Name))
+                ddlCoordinator.Items.Add(new ListItem(c.Name, c.Id));
         }
 
         private void BindProjects()
         {
-            var service = Fundep.WebApp.ServiceFactory.Create();
-            var coords = service.GetCoordinators().ToDictionary(c => c.Id, c => c.Name);
-            var projects = service.GetProjects().Select(p => new
-            {
-                p.ProjectNumber,
-                p.SubProjectNumber,
-                p.Name,
-                CoordinatorName = coords.ContainsKey(p.CoordinatorId) ? coords[p.CoordinatorId] : "(não encontrado)",
-                Balance = p.Balance.ToString("N2", CultureInfo.GetCultureInfo("pt-BR"))
-            }).ToList();
+            lblInfo.Text = "";
+            lblOk.Text = "";
 
-            gvProjects.DataSource = projects;
+            var service = Service();
+
+            var list = service.GetProjects();
+            var coords = service.GetCoordinators();
+
+            foreach (var p in list)
+            {
+                var c = coords.FirstOrDefault(x => x.Id == p.CoordinatorId);
+                p.CoordinatorName = c != null ? c.Name : "";
+            }
+
+            var fNumber = (txtFilterNumber.Text ?? "").Trim();
+            var fName = (txtFilterName.Text ?? "").Trim();
+
+            if (!string.IsNullOrWhiteSpace(fNumber))
+                list = list.Where(p => p.ProjectNumber == fNumber).ToList();
+
+            if (!string.IsNullOrWhiteSpace(fName))
+                list = list.Where(p => (p.Name ?? "").IndexOf(fName, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+
+            gvProjects.DataSource = list;
             gvProjects.DataBind();
+
+            if (list.Count == 0)
+                lblInfo.Text = "Nenhum projeto encontrado.";
         }
 
         protected void BtnSave_Click(object sender, EventArgs e)
         {
-            lblInfo.Text = ""; lblOk.Text = "";
+            lblInfo.Text = "";
+            lblOk.Text = "";
 
-            if (string.IsNullOrWhiteSpace(txtProjectNumber.Text) ||
-                string.IsNullOrWhiteSpace(txtSubProjectNumber.Text) ||
-                string.IsNullOrWhiteSpace(txtName.Text) ||
-                string.IsNullOrWhiteSpace(ddlCoordinator.SelectedValue) ||
-                string.IsNullOrWhiteSpace(txtBalance.Text))
-            {
-                lblInfo.Text = "Preencha todos os campos do projeto.";
-                return;
-            }
-
-            decimal balance;
-            if (!decimal.TryParse(txtBalance.Text, NumberStyles.Any, CultureInfo.GetCultureInfo("pt-BR"), out balance) &&
-                !decimal.TryParse(txtBalance.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out balance))
-            {
-                lblInfo.Text = "Saldo inválido. Use um número (ex.: 1500,00).";
-                return;
-            }
+            if (!Page.IsValid) return;
 
             try
             {
-                var service = Fundep.WebApp.ServiceFactory.Create();
+                var service = Service();
+                var coordId = ddlCoordinator.SelectedValue;
+
+                var coord = service.GetCoordinators().FirstOrDefault(c => c.Id == coordId);
+                if (coord == null) { lblInfo.Text = "Selecione um coordenador válido."; return; }
+
                 service.CreateProject(new Project
                 {
                     ProjectNumber = txtProjectNumber.Text.Trim(),
                     SubProjectNumber = txtSubProjectNumber.Text.Trim(),
                     Name = txtName.Text.Trim(),
-                    CoordinatorId = ddlCoordinator.SelectedValue,
-                    Balance = balance
+                    CoordinatorId = coord.Id,
+                    CoordinatorName = coord.Name,
+                    Balance = decimal.Parse(txtBalance.Text.Trim()),
                 });
 
                 lblOk.Text = "Projeto cadastrado com sucesso.";
-                BtnClear_Click(null, null);
+                ClearCreateForm();
                 BindProjects();
             }
-            catch (Exception ex) { lblInfo.Text = ex.Message; }
+            catch (Exception ex)
+            {
+                lblInfo.Text = ex.Message;
+            }
         }
 
         protected void BtnClear_Click(object sender, EventArgs e)
+        {
+            lblInfo.Text = "";
+            lblOk.Text = "";
+            ClearCreateForm();
+            ClearValidators();
+        }
+
+        private void ClearCreateForm()
         {
             txtProjectNumber.Text = "";
             txtSubProjectNumber.Text = "";
             txtName.Text = "";
             txtBalance.Text = "";
-            ddlCoordinator.SelectedIndex = 0;
+            if (ddlCoordinator.Items.Count > 0) ddlCoordinator.SelectedIndex = 0;
         }
 
-        protected void Gv_RowEditing(object sender, System.Web.UI.WebControls.GridViewEditEventArgs e)
+        protected void BtnSearch_Click(object sender, EventArgs e)
+        {
+            lblInfo.Text = "";
+            lblOk.Text = "";
+            btnClearSearch.Enabled = true;
+
+            BindProjects();
+        }
+
+        protected void BtnClearSearch_Click(object sender, EventArgs e)
+        {
+            txtFilterNumber.Text = "";
+            txtFilterName.Text = "";
+            lblInfo.Text = "";
+            lblOk.Text = "";
+
+            btnClearSearch.Enabled = false;
+
+            ClearValidators();
+            BindProjects();
+        }
+
+        private void ClearValidators()
+        {
+            foreach (System.Web.UI.IValidator v in Page.Validators)
+                v.IsValid = true;
+        }
+
+        protected void Gv_RowEditing(object sender, GridViewEditEventArgs e)
         {
             gvProjects.EditIndex = e.NewEditIndex;
-            RebindForEditRow();
-        }
+            BindProjects();
 
-        private void RebindForEditRow()
-        {
-            var service = Fundep.WebApp.ServiceFactory.Create();
-            var coords = service.GetCoordinators();
-            var coordMap = coords.ToDictionary(c => c.Id, c => c.Name);
-
-            var projects = service.GetProjects().Select(p => new
+            var row = gvProjects.Rows[e.NewEditIndex];
+            var ddl = (DropDownList)row.FindControl("ddlEditCoordinator");
+            if (ddl != null)
             {
-                p.ProjectNumber,
-                p.SubProjectNumber,
-                p.Name,
-                CoordinatorId = p.CoordinatorId,
-                CoordinatorName = coordMap.ContainsKey(p.CoordinatorId) ? coordMap[p.CoordinatorId] : "(não encontrado)",
-                Balance = p.Balance.ToString("N2", CultureInfo.GetCultureInfo("pt-BR"))
-            }).ToList();
-
-            gvProjects.DataSource = projects;
-            gvProjects.DataBind();
-
-            if (gvProjects.EditIndex >= 0 && gvProjects.EditIndex < gvProjects.Rows.Count)
-            {
-                var row = gvProjects.Rows[gvProjects.EditIndex];
-                var ddl = (System.Web.UI.WebControls.DropDownList)row.FindControl("ddlEditCoordinator");
                 ddl.Items.Clear();
-                foreach (var c in coords)
-                    ddl.Items.Add(new System.Web.UI.WebControls.ListItem(c.Name, c.Id));
+                var coords = Service().GetCoordinators().OrderBy(x => x.Name).ToList();
+                foreach (var c in coords) ddl.Items.Add(new ListItem(c.Name, c.Id));
 
-                var coordId = projects[gvProjects.EditIndex].CoordinatorId;
-                var item = ddl.Items.FindByValue(coordId);
-                if (item != null) item.Selected = true;
+                var keys = gvProjects.DataKeys[e.NewEditIndex];
+                var projectNumber = keys.Values["ProjectNumber"].ToString();
+                var subProjectNumber = keys.Values["SubProjectNumber"].ToString();
+
+                var current = Service().GetProjects()
+                    .FirstOrDefault(p => p.ProjectNumber == projectNumber && p.SubProjectNumber == subProjectNumber);
+
+                if (current != null && !string.IsNullOrWhiteSpace(current.CoordinatorId))
+                    ddl.SelectedValue = current.CoordinatorId;
             }
         }
 
-        protected void Gv_RowCancelingEdit(object sender, System.Web.UI.WebControls.GridViewCancelEditEventArgs e)
+        protected void Gv_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
         {
             gvProjects.EditIndex = -1;
             BindProjects();
         }
 
-        protected void Gv_RowUpdating(object sender, System.Web.UI.WebControls.GridViewUpdateEventArgs e)
+        protected void Gv_RowUpdating(object sender, GridViewUpdateEventArgs e)
         {
-            lblInfo.Text = ""; lblOk.Text = "";
-
             try
             {
                 var keys = gvProjects.DataKeys[e.RowIndex];
-                var projectNumber = keys.Values[0].ToString();
-                var subProjectNumber = keys.Values[1].ToString();
+                var projectNumber = keys.Values["ProjectNumber"].ToString();
+                var subProjectNumber = keys.Values["SubProjectNumber"].ToString();
 
                 var row = gvProjects.Rows[e.RowIndex];
-                var nameTextBox = (System.Web.UI.WebControls.TextBox)row.Cells[2].Controls[0];
-                var ddl = (System.Web.UI.WebControls.DropDownList)row.FindControl("ddlEditCoordinator");
-                var balanceTextBox = (System.Web.UI.WebControls.TextBox)row.Cells[4].Controls[0];
+
+                var nameTextBox = (TextBox)row.Cells[2].Controls[0];
+                var ddl = (DropDownList)row.FindControl("ddlEditCoordinator");
+                var balanceTextBox = (TextBox)row.Cells[4].Controls[0];
 
                 var newName = (nameTextBox.Text ?? "").Trim();
-                var newCoordId = ddl.SelectedValue;
-                var balanceRaw = (balanceTextBox.Text ?? "").Trim();
+                var newBalance = (balanceTextBox.Text ?? "").Trim();
 
-                if (string.IsNullOrWhiteSpace(newName) || string.IsNullOrWhiteSpace(newCoordId) || string.IsNullOrWhiteSpace(balanceRaw))
+                if (string.IsNullOrWhiteSpace(newName))
                 {
-                    lblInfo.Text = "Nome, coordenador e saldo são obrigatórios.";
+                    lblInfo.Text = "Nome do projeto é obrigatório.";
                     return;
                 }
 
-                decimal balance;
-                if (!decimal.TryParse(balanceRaw, NumberStyles.Any, CultureInfo.GetCultureInfo("pt-BR"), out balance) &&
-                    !decimal.TryParse(balanceRaw, NumberStyles.Any, CultureInfo.InvariantCulture, out balance))
-                {
-                    lblInfo.Text = "Saldo inválido.";
-                    return;
-                }
+                var service = Service();
+                var coord = service.GetCoordinators().FirstOrDefault(c => c.Id == (ddl?.SelectedValue ?? ""));
+                if (coord == null) { lblInfo.Text = "Selecione um coordenador válido."; return; }
 
-                var service = Fundep.WebApp.ServiceFactory.Create();
                 service.UpdateProject(new Project
                 {
                     ProjectNumber = projectNumber,
                     SubProjectNumber = subProjectNumber,
                     Name = newName,
-                    CoordinatorId = newCoordId,
-                    Balance = balance
+                    CoordinatorId = coord.Id,
+                    CoordinatorName = coord.Name,
+                    Balance = decimal.Parse(newBalance)
                 });
 
                 gvProjects.EditIndex = -1;
@@ -199,17 +237,15 @@ namespace Fundep.WebApp.Pages
             catch (Exception ex) { lblInfo.Text = ex.Message; }
         }
 
-        protected void Gv_RowDeleting(object sender, System.Web.UI.WebControls.GridViewDeleteEventArgs e)
+        protected void Gv_RowDeleting(object sender, GridViewDeleteEventArgs e)
         {
-            lblInfo.Text = ""; lblOk.Text = "";
             try
             {
                 var keys = gvProjects.DataKeys[e.RowIndex];
-                var projectNumber = keys.Values[0].ToString();
-                var subProjectNumber = keys.Values[1].ToString();
+                var projectNumber = keys.Values["ProjectNumber"].ToString();
+                var subProjectNumber = keys.Values["SubProjectNumber"].ToString();
 
-                var service = Fundep.WebApp.ServiceFactory.Create();
-                service.DeleteProject(projectNumber, subProjectNumber);
+                Service().DeleteProject(projectNumber, subProjectNumber);
 
                 lblOk.Text = "Projeto excluído.";
                 BindProjects();
